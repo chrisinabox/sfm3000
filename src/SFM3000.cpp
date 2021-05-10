@@ -52,14 +52,34 @@ uint32_t SFM3000::getSerial() {
 
 }
 
-float SFM3000::getMeasurement() {
+float SFM3000::getMeasurement(bool auto_repeat) {
     
     if (SFM3000_READ_FLOW != _current_command) {
-        if (!_write(SFM3000_READ_FLOW)) return 0xFFFF;
+        if (!_write(SFM3000_READ_FLOW)) 
+		{
+			return 0xFFFF;
+		}
+		
+		delay(60);	//Recommended delay from I2C reference guide
     }
     
     uint16_t raw;
-    if (!_readWithDelay(&raw)) return 0xFFFF;
+	
+	if (auto_repeat)
+	{
+		if (!_readWithDelay(&raw)) 
+		{
+			return 0xFFFF;
+		}
+	}
+	else
+	{
+		if (!_read(&raw)) 
+		{
+			return 0xFFFF;
+		}
+	}
+	
     
     float flow = ((float) raw - SFM3000_OFFSET) / SFM3000_SCALE;
     if ((flow < SFM3000_MIN_FLOW) || (SFM3000_MAX_FLOW < flow)) return 0xFFFF;
@@ -68,9 +88,14 @@ float SFM3000::getMeasurement() {
 
 }
 
-void SFM3000::reset() {
-	_write(SFM3000_SOFT_RESET);
-    delay(100);
+bool SFM3000::reset(bool auto_delay) {
+	bool acknowledged = _write(SFM3000_SOFT_RESET);
+	
+	if (auto_delay && acknowledged) {
+		delay(80);	//Recommended delay according to datasheet
+	}
+	
+	return acknowledged;
 }
 
 // ----------------------------------------------------------------------------

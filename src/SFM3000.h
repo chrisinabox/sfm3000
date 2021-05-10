@@ -46,8 +46,8 @@ class SFM3000 {
         SFM3000(uint8_t address);
         void begin();
         uint32_t getSerial();
-        float getMeasurement();
-        void reset();
+        float getMeasurement(bool auto_repeat = true);
+        bool reset(bool auto_delay = true);
 
     protected:
 
